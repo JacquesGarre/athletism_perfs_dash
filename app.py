@@ -31,6 +31,7 @@ GRAPHS = [
 #   'title' : 'Discipline Human readable name'
 # }
 #
+# TO DO : put that fuckin long dictionnary in a json file bruh pliz
 CODES = {
   'MA0': {
     'cols' : [2,4,8],
