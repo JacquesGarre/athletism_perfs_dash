@@ -5,32 +5,6 @@ import pandas as pd
 import os
 import sys
 
-
-# TO DO, get combinations 'year/code' and generate GRAPHS... Only 3 graphs to show an example atm...      
-GRAPHS = [
-  {
-    'year':'1891',
-    'code': 'MA0'
-  },
-  {
-    'year':'1891',
-    'code': 'MA1'
-  },
-  {
-    'year':'1891',
-    'code': 'MA2'
-  }
-]
-
-
-#
-# EXAMPLE BELOW :
-#
-# 'EVENT_CODE': {
-#   'cols' : [index of names column, index of perfs column, index of date column],
-#   'title' : 'Discipline Human readable name'
-# }
-#
 # TO DO : put that fuckin long dictionnary in a json file bruh pliz
 CODES = {
   'MA0': {
@@ -292,16 +266,70 @@ def plot_line_graph(graph_dict):
       }
   )
 
-layout_arr = [
-    html.H1(children="Athlétisme - Performances")
-]
+def get_years_dropdown():
+  years = [{'label': year, 'value': year} for year in range(1891, 2020)]
+  return dcc.Dropdown(
+    id='years-dropdown',
+    options=years,
+    value='1891'
+  )
 
-for graph in GRAPHS:
-  layout_arr.append(plot_line_graph(graph))
+def get_disciplines_dropdown(dd_id):
+  disciplines = [{'label': CODES[code]['title'], 'value': code} for code in CODES.keys()]
+  return dcc.Dropdown(
+    id=dd_id,
+    options=disciplines,
+    value='MA0'
+  )
+
+def get_range_slider():
+  return dcc.RangeSlider(
+        id='my-range-slider',
+        min=1891,
+        max=2019,
+        step=1,
+        value=[1891, 2019]
+    )
+
+layout_arr = [
+    html.H1(children="Athlétisme - Performances"),
+    html.Hr(),
+    html.H3(children="Graphique par discipline/année"),
+    get_years_dropdown(),
+    html.Br(),
+    get_disciplines_dropdown('disciplines-dropdown'),
+    html.Div(id='dd-output-container'),
+    html.Hr(),
+    html.H3(children="Graphique par fourchette d'années"),
+    get_disciplines_dropdown('disciplines-dropdown2'),
+    html.Br(),
+    get_range_slider(),
+    html.Div(id='output-container-range-slider')
+]
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 app.layout = html.Div(children=layout_arr)
+
+@app.callback(
+    dash.dependencies.Output('output-container-range-slider', 'children'),
+    [dash.dependencies.Input('disciplines-dropdown2', 'value'), dash.dependencies.Input('my-range-slider', 'value')])
+def update_output(dropdown_value, range_value):
+    return 'Performances de la discipline : {}, de {} à {}'.format(dropdown_value, range_value[0], range_value[1])
+
+@app.callback(
+    dash.dependencies.Output('dd-output-container', 'children'),
+    [dash.dependencies.Input('years-dropdown', 'value'), dash.dependencies.Input('disciplines-dropdown', 'value')])
+def update_output(years_value, event_code):
+    print('Searching for:', str(years_value) + '_' + event_code)
+    discipline = CODES[event_code]['title']
+    graph_dict = {
+      'year': str(years_value),
+      'code': event_code
+    }
+    print(graph_dict)
+    # return 'Vous recherchez le TOP 25 de la discipline : {} | Année {}'.format(discipline, years_value)
+    return plot_line_graph(graph_dict)
 
 if __name__ == '__main__':
     app.run_server(debug=True)
